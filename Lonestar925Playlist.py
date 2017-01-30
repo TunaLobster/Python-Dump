@@ -1,28 +1,33 @@
-import requests, codecs, time, spotify, csv
+import codecs
+import csv
+import time
 
-# Writen originally for Python 2.7 and adoption for Python 3.5 ws started
-# Deprecated as for Jul '16 as libspotify binaries are no longer available and no alternative has been developed
+import requests
+import spotify  # See note
+
+# Writen originally for Python 2.7 and adoption for Python 3.5 was started
+# Deprecated as of Jul '16 as libspotify binaries are no longer available and no alternative has been developed
 # See https://github.com/mopidy/mopidy-spotify/issues/110 for discussion
 
-userName = ''# guess
-password = ''# you got this
+userName = ''  # guess
+password = ''  # you got this
 
 # Track changes to csv
-file = codecs.open('925Playlist.csv','r','utf8')
+file = codecs.open('925Playlist.csv', 'r', 'utf8')
 oldList = [line.strip() for line in file]
 file.close()
 
 get = requests.get('http://www.lonestar925.com/playlist/')
-file = codecs.open('925Playlist.csv','a','utf8')
+file = codecs.open('925Playlist.csv', 'a', 'utf8')
 s = 0
 e = 0
 
 if get.status_code is 200:
     text = get.text
-    
+
     if text.find('a class ="title', s) is -1:
         raise Exception('Playlist webpage empty')
-    
+
     s = text.find('<ol class="chartList')
     if s != -1:
         s += len('<ol class="chartList')
@@ -40,7 +45,7 @@ if get.status_code is 200:
             e = text.index('</a>', s)
             artist = text[s:e]
             # output to file
-            file.write('"%s","%s"\n'%(artist,track))
+            file.write('"%s","%s"\n' % (artist, track))
     else:
         raise Exception("Could not find chartList.")
 else:
@@ -50,7 +55,7 @@ else:
 file.close()
 
 # Read in file
-file = codecs.open('925Playlist.csv','r','utf8')
+file = codecs.open('925Playlist.csv', 'r', 'utf8')
 unsortedList = [line.strip() for line in file]
 
 # Remove duplicates
@@ -61,12 +66,12 @@ list = unsortedList
 # Record added tracks
 addTracks = [x for x in list if x not in oldList]
 
-print('%s  Tracks to add: %s'%(time.strftime('%a, %d %b %Y %H:%M:%S', time.localtime()),addTracks))
+print('%s  Tracks to add: %s' % (time.strftime('%a, %d %b %Y %H:%M:%S', time.localtime()), addTracks))
 
 if not addTracks:
     quit()
 
-addTracksFile = codecs.open('AddTracks.csv','w','utf8')
+addTracksFile = codecs.open('AddTracks.csv', 'w', 'utf8')
 
 for i in addTracks:
     addTracksFile.write("%s\n" % i)
@@ -75,7 +80,7 @@ addTracksFile.close()
 
 file.close()
 
-file = codecs.open('925Playlist.csv','w','utf8')
+file = codecs.open('925Playlist.csv', 'w', 'utf8')
 
 for i in list:
     file.write("%s\n" % i)
@@ -85,7 +90,7 @@ file.close()
 # Begin adding new tracks to "Lonestar 92.5 KZPS" Spotify playlist#
 # Start session and login
 session = spotify.Session()
-session.login(userName,password)
+session.login(userName, password)
 time.sleep(5)
 state = session.connection.state
 
@@ -94,6 +99,7 @@ def state_check():
     session.process_events()
     time.sleep(1)
     state = session.connection.state
+
 
 # Lazy way to check session. Better would be using events.
 state_check()
@@ -106,14 +112,14 @@ playlist = session.playlist_container[2]
 playlist.load(timeout=10)
 
 # Search for each track in CSV. Could be better by checking popularity of the top 5 results.
-with codecs.open('AddTracks.csv','rb','utf8') as csvfile:
-    text = csv.reader(csvfile, escapechar = '\\')
+with codecs.open('AddTracks.csv', 'rb', 'utf8') as csvfile:
+    text = csv.reader(csvfile, escapechar='\\')
     for row in text:
         search_artist = row[0]
         search_track = row[1]
-        
-        search = session.search('%s %s'%(search_artist,search_track))
-        
+
+        search = session.search('%s %s' % (search_artist, search_track))
+
         attempts = 25
         while attempts > 0:
             attempts -= 1
@@ -123,12 +129,12 @@ with codecs.open('AddTracks.csv','rb','utf8') as csvfile:
                 time.sleep(3)
                 print(attempts)
                 continue
-        
+
         if attempts is 0:
             print('Timeout error')
         else:
             continue
-        
+
         try:
             track = search.tracks[0].load(timeout=10)
         except:
@@ -139,7 +145,7 @@ with codecs.open('AddTracks.csv','rb','utf8') as csvfile:
                 print('No search results!')
             else:
                 playlist.add_tracks(track)
-                
+
         state_check()
         state_check()
         time.sleep(1)

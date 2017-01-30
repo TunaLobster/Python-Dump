@@ -1,12 +1,12 @@
 #!C:\Python27
 
-#For 500,000 mutables, this takes WAY to long. Look for better options
-import sys
+# For 500,000 mutables, this takes WAY to long. Look for better options
 
-orgFile = open('InputList.txt','r')
-newFile = open('SortedList.txt','w')
+orgFile = open('InputList.txt', 'r')
+newFile = open('SortedList.txt', 'w')
 
 unsortedList = [line.strip() for line in orgFile]
+
 
 def bubble_sort(list):
     for i in reversed(range(len(list))):
@@ -18,6 +18,7 @@ def bubble_sort(list):
         if finished:
             break
     return list
+
 
 sortedList = bubble_sort(unsortedList)
 
