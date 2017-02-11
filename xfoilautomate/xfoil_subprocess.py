@@ -28,6 +28,7 @@ def x1():
         issueCmd('0')  # start alpha
         issueCmd('12')  # end alpha
         issueCmd('1')  # alpha step
+        issueCmd('PACC')
         issueCmd('')  # xfoil menu
         issueCmd('')  # double check to main menu
 
