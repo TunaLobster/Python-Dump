@@ -1,4 +1,5 @@
 import subprocess as sp
+import os
 
 foils = ['0009', '0012', '0015', '2415', '4412', '4415', '23012']
 
@@ -41,7 +42,7 @@ def x1():
     issueCmd('')  # double check to main menu
 
 
-def x2(re):  # re as string
+def x2(re):
     issueCmd('NACA 4512')  # dummy foil to turn on viscosit
     issueCmd('OPER')
     issueCmd('VISC')
