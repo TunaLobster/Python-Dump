@@ -1,7 +1,7 @@
 import os
 
 
-# Inital dumb way fo doing it. Better way would be to split on ' - ' and go from there.
+# Inital way of doing it. Better way would be to split on ' - ' and go from there.
 def names(pwd):
     '''
 
@@ -32,18 +32,21 @@ def turnindate(pwd):
 
 
 # Here's a better way!
-def splitfilenames(pwd):
+def splitfilenames(pwd, ext):
     allfiles = os.listdir(pwd)
     data = []
     for filename in allfiles:
-        number, name, date, submission = filename.split(b' - ')
-        data.append((number, tuple(name.split(b' ')), date, submission))
+        if not filename.endswith(ext):
+            continue
+        number, name, date, submission = filename.split(b' - ', 3)
+        data.append([number, tuple(name.split(b' ')), date, submission])
     return data
 
 
 def __main__():
-    data = splitfilenames(b'C:\Users\charl\Downloads\Lab #1 (shapes and rocket) Download Sep 7, 2018 237 PM')
-    print(data)
+    data = splitfilenames(b'C:\Users\Charlie\Downloads\Homework 2 - Upload Download Sep 11, 2018 749 PM', (b'.py'))
+    for i in data:
+        print(i)
 
 
 if __name__ == '__main__':
