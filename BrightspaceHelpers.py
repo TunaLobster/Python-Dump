@@ -1,4 +1,5 @@
 import os
+import xlsxwriter
 
 
 # Inital way of doing it. Better way would be to split on ' - ' and go from there.
@@ -33,20 +34,38 @@ def turnindate(pwd):
 
 # Here's a better way!
 def splitfilenames(pwd, ext):
+    '''
+
+    :param pwd: Directory sting where the submitted assignments were downloaded and extracted to
+    :param ext: Tuple of stings of file extensions to scan for. Example: ('.py') or ('.sldprt','.sldasm')
+    :return:
+    '''
     allfiles = os.listdir(pwd)
-    data = []
+    data = [['number', 'lastname', 'firstname', 'data', 'filename submitted']]
     for filename in allfiles:
         if not filename.endswith(ext):
             continue
-        number, name, date, submission = filename.split(b' - ', 3)
-        data.append([number, tuple(name.split(b' ')), date, submission])
+        number, name, date, submission = filename.decode('utf-8').split(' - ', 3)
+        lastname, firstname = name.split(' ', 1)
+        data.append([number, lastname, firstname, date, submission])
     return data
 
 
+def write2excel(data):
+    workbook = xlsxwriter.Workbook('3403F18.xlsx')
+    worksheet = workbook.add_worksheet()
+    for row in range(len(data)):
+        for col in range(len(data[row])):
+            worksheet.write(row, col, data[row][col])
+    workbook.close()
+
+
 def __main__():
-    data = splitfilenames(b'C:\Users\Charlie\Downloads\Homework 2 - Upload Download Sep 11, 2018 749 PM', (b'.py'))
-    for i in data:
+    filenamedata = splitfilenames(b'C:\Users\Charlie\Downloads\Homework 2 - Upload Download Sep 11, 2018 749 PM',
+                                  b'.py')
+    for i in filenamedata:
         print(i)
+    write2excel(filenamedata)
 
 
 if __name__ == '__main__':
