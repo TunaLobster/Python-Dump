@@ -2,7 +2,7 @@ import os
 import xlsxwriter
 
 
-# Inital way of doing it. Better way would be to split on ' - ' and go from there.
+# Initial way of doing it. Better way would be to split on ' - ' and go from there.
 def names(pwd):
     '''
 
@@ -32,7 +32,7 @@ def turnindate(pwd):
     return dates
 
 
-# Here's a better way!
+# Here is a better way!
 def splitfilenames(pwd, ext):
     '''
 
@@ -52,7 +52,7 @@ def splitfilenames(pwd, ext):
 
 
 def write2excel(data):
-    workbook = xlsxwriter.Workbook('3403F18.xlsx')
+    workbook = xlsxwriter.Workbook('3403F18.xlsx')  # note that xlsxwriter cannot overwrite existing files
     worksheet = workbook.add_worksheet()
     for row in range(len(data)):
         for col in range(len(data[row])):
@@ -60,13 +60,11 @@ def write2excel(data):
     workbook.close()
 
 
-def __main__():
+def __example__():
     filenamedata = splitfilenames(b'C:\Users\Charlie\Downloads\Homework 2 - Upload Download Sep 11, 2018 749 PM',
                                   b'.py')
-    for i in filenamedata:
-        print(i)
     write2excel(filenamedata)
 
 
 if __name__ == '__main__':
-    __main__()
+    __example__()
