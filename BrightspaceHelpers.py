@@ -51,6 +51,14 @@ def splitfilenames(pwd, ext):
     return data
 
 
+def removenumbers(pwd, ext):
+    allfiles = os.listdir(pwd)
+    for filename in allfiles:
+        if not filename.endswith(ext):
+            continue
+        os.rename(filename, filename.decode('utf-8')[filename.find(' - ') + 3:])
+
+
 def write2excel(data):
     workbook = xlsxwriter.Workbook('3403F18.xlsx')  # note that xlsxwriter cannot overwrite existing files
     worksheet = workbook.add_worksheet()
