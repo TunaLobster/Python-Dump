@@ -43,7 +43,7 @@ def splitfilenames(pwd, ext):
     allfiles = os.listdir(pwd)
     data = [['number', 'lastname', 'firstname', 'data', 'filename submitted']]
     for filename in allfiles:
-        if not filename.endswith(ext):
+        if not filename.lower().endswith(ext):
             continue
         number, name, date, submission = filename.decode('utf-8').split(' - ', 3)
         lastname, firstname = name.split(' ', 1)
@@ -54,13 +54,13 @@ def splitfilenames(pwd, ext):
 def removenumbers(pwd, ext):
     allfiles = os.listdir(pwd)
     for filename in allfiles:
-        if not filename.endswith(ext):
+        if not filename.lower().endswith(ext):
             continue
-        os.rename(filename, filename.decode('utf-8')[filename.find(' - ') + 3:])
+        os.rename(os.path.join(pwd, filename), os.path.join(pwd, filename[filename.find(b' - ') + 3:]))
 
 
 def write2excel(data):
-    workbook = xlsxwriter.Workbook('3403F18.xlsx')  # note that xlsxwriter cannot overwrite existing files
+    workbook = xlsxwriter.Workbook('1332F18 Lab2 grades.xlsx')  # note that xlsxwriter cannot overwrite existing files
     worksheet = workbook.add_worksheet()
     for row in range(len(data)):
         for col in range(len(data[row])):
@@ -69,9 +69,11 @@ def write2excel(data):
 
 
 def __example__():
-    filenamedata = splitfilenames(b'C:\Users\Charlie\Downloads\Homework 2 - Upload Download Sep 11, 2018 749 PM',
-                                  b'.py')
+    path = b'C:\Users\charl\Downloads\Lab #2 (heat exchanger, pawn, bolt) Download Sep 14, 2018 230 PM'
+    extension = b'.sldprt'
+    filenamedata = splitfilenames(path, extension)
     write2excel(filenamedata)
+    removenumbers(path, extension)
 
 
 if __name__ == '__main__':
