@@ -1,4 +1,5 @@
 import os
+
 import xlsxwriter
 
 
@@ -59,8 +60,9 @@ def removenumbers(pwd, ext):
         os.rename(os.path.join(pwd, filename), os.path.join(pwd, filename[filename.find(b' - ') + 3:]))
 
 
-def write2excel(data):
-    workbook = xlsxwriter.Workbook('1332F18 Lab2 grades.xlsx')  # note that xlsxwriter cannot overwrite existing files
+def write2excel(path, data):
+    # note that xlsxwriter cannot overwrite existing files
+    workbook = xlsxwriter.Workbook(os.path.join(path, '1332F18 Lab2 grades.xlsx'))
     worksheet = workbook.add_worksheet()
     for row in range(len(data)):
         for col in range(len(data[row])):
@@ -69,10 +71,10 @@ def write2excel(data):
 
 
 def __example__():
-    path = b'C:\Users\charl\Downloads\Lab #2 (heat exchanger, pawn, bolt) Download Sep 14, 2018 230 PM'
-    extension = b'.sldprt'
+    path = b'C:\Users\Charlie\Dropbox\Graduate\GTA\3403F18\Homework 4 - Upload Download Oct 2, 2018 402 PM'
+    extension = b'.py'
     filenamedata = splitfilenames(path, extension)
-    write2excel(filenamedata)
+    write2excel(path, filenamedata)
     removenumbers(path, extension)
 
 
