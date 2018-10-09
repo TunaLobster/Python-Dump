@@ -1,68 +1,48 @@
 import os
 
 import xlsxwriter
+from fuzzywuzzy import fuzz
+
+# external file with a list of solutions copied and pasted from the internet
+import solutions
 
 
-# Initial way of doing it. Better way would be to split on ' - ' and go from there.
-def names(pwd):
+def filenameparser(filename):
+    number, name, date, submission = filename.split(' - ', 3)
+    lastname, firstname = name.split(' ', 1)
+    return [number, lastname, firstname, date, submission]
+
+
+def splitfilenames(path, ext):
     '''
 
-    :param dir: A directory sting where the submitted assignments are held
-    :return: A list of list names (last, first) from the files
-    '''
-    allfiles = os.listdir(pwd)
-    names = []
-    for filename in allfiles:
-        name = filename[filename.find(b' - ') + 3:filename.find(b' - ', 17)]
-        names.append(tuple(name.split(b' ')))
-    return names
-
-
-def turnindate(pwd):
-    '''
-
-    :param pwd: A directory sting where the submitted assignments are held
-    :return: A list of dates when the files were submitted
-    '''
-    allfiles = os.listdir(pwd)
-    dates = []
-    for filename in allfiles:
-        s = filename.find(b' - ', filename.find(b' - ') + 3) + 3
-        date = filename[s:filename.find(b' - ', s)]
-        dates.append(date)
-    return dates
-
-
-# Here is a better way!
-def splitfilenames(pwd, ext):
-    '''
-
-    :param pwd: Directory sting where the submitted assignments were downloaded and extracted to
+    :param path: Directory sting where the submitted assignments were downloaded and extracted to
     :param ext: Tuple of stings of file extensions to scan for. Example: ('.py') or ('.sldprt','.sldasm')
     :return:
     '''
-    allfiles = os.listdir(pwd)
+    allfiles = os.listdir(path)
     data = [['number', 'lastname', 'firstname', 'data', 'filename submitted']]
     for filename in allfiles:
         if not filename.lower().endswith(ext):
             continue
-        number, name, date, submission = filename.decode('utf-8').split(' - ', 3)
-        lastname, firstname = name.split(' ', 1)
-        data.append([number, lastname, firstname, date, submission])
+        # number, name, date, submission = filename.split(' - ', 3)
+        # lastname, firstname = name.split(' ', 1)
+        # data.append([number, lastname, firstname, date, submission])
+        data.append(filenameparser(filename))
     return data
 
 
-def removenumbers(pwd, ext):
-    allfiles = os.listdir(pwd)
+def removenumbers(path, ext):
+    allfiles = os.listdir(path)
     for filename in allfiles:
         if not filename.lower().endswith(ext):
             continue
-        os.rename(os.path.join(pwd, filename), os.path.join(pwd, filename[filename.find(b' - ') + 3:]))
+        os.rename(os.path.join(path, filename), os.path.join(path, filename[filename.find(' - ') + 3:]))
 
 
-def write2excel(path, data):
+def write2excel(path, data, outputname):
     # note that xlsxwriter cannot overwrite existing files
-    workbook = xlsxwriter.Workbook(os.path.join(path, '1332F18 Lab2 grades.xlsx'))
+    workbook = xlsxwriter.Workbook(os.path.join(path, outputname))
     worksheet = workbook.add_worksheet()
     for row in range(len(data)):
         for col in range(len(data[row])):
@@ -70,11 +50,35 @@ def write2excel(path, data):
     workbook.close()
 
 
+def scanforsoltuions(path, ext, solutionslist, percent):
+    allfiles = os.listdir(path)
+    for filename in allfiles:
+        if not filename.lower().endswith(ext):
+            continue
+        with open(os.path.join(path, filename), 'r') as studentfile:
+            studentcode = studentfile.read()
+        for soltuion in solutionslist:
+            # token set ratio had best results
+            score = fuzz.token_set_ratio(soltuion, studentcode)
+            if score > percent:
+                yield filenameparser(filename)[1:3], filenameparser(filename)[-1], score
+
+
 def __example__():
-    path = b'C:\Users\Charlie\Dropbox\Graduate\GTA\3403F18\Homework 4 - Upload Download Oct 2, 2018 402 PM'
-    extension = b'.py'
-    filenamedata = splitfilenames(path, extension)
-    write2excel(path, filenamedata)
+    path = r'C:\Users\Charlie\Dropbox\Graduate\GTA\3403F18\Homework 4 - Upload Download Oct 2, 2018 402 PM'
+    extension = '.py'
+    outputfilename = '3403F18'
+    solutionslist = solutions.solutionlist
+    percentsimilar = 85  # 85 seemed to turn up the most likely candidates. It's not perfect though
+    studentfilenamedata = splitfilenames(path, extension)
+    write2excel(path, studentfilenamedata, outputfilename)
+    solutionsfound = scanforsoltuions(path, extension, solutionslist, percentsimilar)
+    for i in solutionsfound:
+        print(i)
+    # for i in filenamedata:
+    #     print(i)
+
+    # DO THIS LAST (For now at least. I'll fix it later.)
     removenumbers(path, extension)
 
 
