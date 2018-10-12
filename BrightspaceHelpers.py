@@ -4,6 +4,7 @@ import xlsxwriter
 from fuzzywuzzy import fuzz
 
 
+# TODO: I should probably write a generator for files that have the correct extension
 def filenameparser(filename):
     number, name, date, submission = filename.split(' - ', 3)
     lastname, firstname = name.split(' ', 1)
@@ -20,7 +21,7 @@ def splitfilenames(path, ext):
     allfiles = os.listdir(path)
     data = [['number', 'lastname', 'firstname', 'data', 'filename submitted']]
     for filename in allfiles:
-        if not filename.lower().endswith(ext):
+        if not filename.lower().endswith(ext.lower()):
             continue
         # number, name, date, submission = filename.split(' - ', 3)
         # lastname, firstname = name.split(' ', 1)
@@ -32,15 +33,15 @@ def splitfilenames(path, ext):
 def removenumbers(path, ext):
     allfiles = os.listdir(path)
     for filename in allfiles:
-        if not filename.lower().endswith(ext):
+        if not filename.lower().endswith(ext.lower()):
             continue
         os.rename(os.path.join(path, filename), os.path.join(path, filename[filename.find(' - ') + 3:]))
 
 
 def write2excel(path, data, outputname):
     # note that xlsxwriter cannot overwrite existing files
-    if not outputname.lower().endswith('xlsx'):
-        outputname = outputname.join('.xlsx')
+    if not outputname.lower().endswith('.xlsx'):
+        outputname = '.'.join([outputname, 'xlsx'])
     workbook = xlsxwriter.Workbook(os.path.join(path, outputname))
     worksheet = workbook.add_worksheet()
     for row in range(len(data)):
@@ -57,7 +58,7 @@ def scanforsoltuions(path, ext, percent):
     solutionslist = solutions.solutionlist
     allfiles = os.listdir(path)
     for filename in allfiles:
-        if not filename.lower().endswith(ext):
+        if not filename.lower().endswith(ext.lower()):
             continue
         with open(os.path.join(path, filename), 'r') as studentfile:
             studentcode = studentfile.read()
