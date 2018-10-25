@@ -5,6 +5,7 @@ from fuzzywuzzy import fuzz
 
 
 # TODO: I should probably write a generator for files that have the correct extension
+# TODO: Write this to handle filenames without numbers
 def filenameparser(filename):
     number, name, date, submission = filename.split(' - ', 3)
     lastname, firstname = name.split(' ', 1)
@@ -30,6 +31,7 @@ def splitfilenames(path, ext):
     return data
 
 
+# TODO: Handle case of numbers not at start of files
 def removenumbers(path, ext):
     allfiles = os.listdir(path)
     for filename in allfiles:
@@ -69,6 +71,7 @@ def scanforsoltuions(path, ext, percent):
                 yield filenameparser(filename)[1:3], filenameparser(filename)[-1], score
 
 
+# TODO: Add function to compare students. Should be bigO(1/n)?
 def __example__():
     path = r''
     extension = ''
@@ -87,5 +90,6 @@ def __example__():
     removenumbers(path, extension)
 
 
+# TODO: Objectify the whole thing
 if __name__ == '__main__':
     __example__()
