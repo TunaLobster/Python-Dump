@@ -73,9 +73,9 @@ def scanforsoltuions(path, ext, percent):
 
 # TODO: Add function to compare students. Should be bigO(1/n)?
 def __example__():
-    path = r''
-    extension = ''
-    outputfilename = ''
+    path = r'C:\Users\Charlie\Dropbox\Graduate\GTA\3403F18\Grading\Homework 6 - Problem1 - Upload Download Oct 22, 2018 948 AM'
+    extension = '.py'
+    outputfilename = '3403F18 HW6 part1 grades'
     percentsimilar = 85  # 85 seemed to turn up the most likely candidates. It's not perfect though
 
     studentfilenamedata = splitfilenames(path, extension)
