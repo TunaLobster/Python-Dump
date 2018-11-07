@@ -12,7 +12,7 @@ def filenameparser(filename):
     return [number, lastname, firstname, date, submission]
 
 
-def splitfilenames(path, ext):
+def splitfilenames(path, exts):
     """
 
     :param path: Directory sting where the submitted assignments were downloaded and extracted to
@@ -22,22 +22,24 @@ def splitfilenames(path, ext):
     allfiles = os.listdir(path)
     data = [['number', 'lastname', 'firstname', 'data', 'filename submitted']]
     for filename in allfiles:
-        if not filename.lower().endswith(ext.lower()):
-            continue
-        # number, name, date, submission = filename.split(' - ', 3)
-        # lastname, firstname = name.split(' ', 1)
-        # data.append([number, lastname, firstname, date, submission])
-        data.append(filenameparser(filename))
+        for ext in exts:
+            if not filename.lower().endswith(ext.lower()):
+                continue
+            # number, name, date, submission = filename.split(' - ', 3)
+            # lastname, firstname = name.split(' ', 1)
+            # data.append([number, lastname, firstname, date, submission])
+            data.append(filenameparser(filename))
     return data
 
 
 # TODO: Handle case of numbers not at start of files
-def removenumbers(path, ext):
+def removenumbers(path, exts):
     allfiles = os.listdir(path)
     for filename in allfiles:
-        if not filename.lower().endswith(ext.lower()):
-            continue
-        os.rename(os.path.join(path, filename), os.path.join(path, filename[filename.find(' - ') + 3:]))
+        for ext in exts:
+            if not filename.lower().endswith(ext.lower()):
+                continue
+            os.rename(os.path.join(path, filename), os.path.join(path, filename[filename.find(' - ') + 3:]))
 
 
 def write2excel(path, data, outputname):
@@ -52,7 +54,7 @@ def write2excel(path, data, outputname):
     workbook.close()
 
 
-def scanforsoltuions(path, ext, percent):
+def scanforsoltuions(path, exts, percent):
     # external file with a list of solutions copied and pasted from the internet in a python list.
     # Example "solutions.py" file contents:
     # solutionlist = ['''copied from google result''','''students shouldn't do this''','''so many ways to tell''']
@@ -60,22 +62,23 @@ def scanforsoltuions(path, ext, percent):
     solutionslist = solutions.solutionlist
     allfiles = os.listdir(path)
     for filename in allfiles:
-        if not filename.lower().endswith(ext.lower()):
-            continue
-        with open(os.path.join(path, filename), 'r') as studentfile:
-            studentcode = studentfile.read()
-        for soltuion in solutionslist:
-            # token set ratio had best results
-            score = fuzz.token_set_ratio(soltuion, studentcode)
-            if score > percent:
-                yield filenameparser(filename)[1:3], filenameparser(filename)[-1], score
+        for ext in exts:
+            if not filename.lower().endswith(ext.lower()):
+                continue
+            with open(os.path.join(path, filename), 'r') as studentfile:
+                studentcode = studentfile.read()
+            for soltuion in solutionslist:
+                # token set ratio had best results
+                score = fuzz.token_set_ratio(soltuion, studentcode)
+                if score > percent:
+                    yield filenameparser(filename)[1:3], filenameparser(filename)[-1], score
 
 
 # TODO: Add function to compare students. Should be bigO(1/n)?
 def __example__():
-    path = r'C:\Users\Charlie\Dropbox\Graduate\GTA\3403F18\Grading\Homework 6 - Problem1 - Upload Download Oct 22, 2018 948 AM'
-    extension = '.py'
-    outputfilename = '3403F18 HW6 part1 grades'
+    path = r''
+    extension = ['.py']
+    outputfilename = ''
     percentsimilar = 85  # 85 seemed to turn up the most likely candidates. It's not perfect though
 
     studentfilenamedata = splitfilenames(path, extension)
