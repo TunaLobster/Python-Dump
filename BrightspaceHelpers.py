@@ -33,6 +33,7 @@ def splitfilenames(path, exts):
 
 
 # TODO: Handle case of numbers not at start of files
+# TODO: Change to using the filename parser function
 def removenumbers(path, exts):
     allfiles = os.listdir(path)
     for filename in allfiles:
@@ -74,23 +75,55 @@ def scanforsoltuions(path, exts, percent):
                     yield filenameparser(filename)[1:3], filenameparser(filename)[-1], score
 
 
-# TODO: Add function to compare students. Should be bigO(1/n)?
+# DONE: Add function to compare students. Should be bigO(1/n)?
+def scanforcopying(path, exts, percent):
+    allfiles = os.listdir(path)
+    for ext in exts:
+        for i in range(len(allfiles) - 1):
+            if not allfiles[i].lower().endswith(ext.lower()):
+                continue
+            with open(os.path.join(path, allfiles[i]), 'r') as checkfile:
+                checkcode = checkfile.read()
+                for filename in allfiles[i + 1:]:
+                    if not filename.lower().endswith(ext.lower()):
+                        continue
+                    with open(os.path.join(path, filename), 'r') as studentfile:
+                        studentcode = studentfile.read()
+                        score = fuzz.ratio(checkcode, studentcode)
+                        # lets ignore some files to speed it up some.
+                        # if score >= 98:
+                        #     continue
+                        # ignoring instructor supplied modules
+                        # if filename.find(r'OpenGL_2D_class.py') != -1 or allfiles[i].find(r'OpenGL_2D_class.py') != -1:
+                        #     continue
+                        if filenameparser(filename)[1:3] == filenameparser(allfiles[i])[1:3]:
+                            continue
+                        if score >= percent:
+                            yield filenameparser(filename)[1:3], filenameparser(filename)[-1], score, filenameparser(
+                                allfiles[i])[1:3], filenameparser(allfiles[i])[-1]
+
+
 def __example__():
     path = r''
-    extension = ['.py']
+    extensions = ['.py']
     outputfilename = ''
-    percentsimilar = 85  # 85 seemed to turn up the most likely candidates. It's not perfect though
+    percentsimilar = 95
+    # 85 seemed to turn up the most likely candidates for copying solutions.
+    # 95 seemed to work well for finding students copying each other.
 
-    studentfilenamedata = splitfilenames(path, extension)
+    studentfilenamedata = splitfilenames(path, extensions)
     write2excel(path, studentfilenamedata, outputfilename)
 
     # only really useful when the submissions are code or text files
-    # solutionsfound = scanforsoltuions(path, extension, percentsimilar)
+    # copiesfound = scanforcopying(path, extensions, percentsimilar)
+    # for i in copiesfound:
+    #     print(i)
+    # solutionsfound = scanforsoltuions(path, extensions, percentsimilar)
     # for i in solutionsfound:
     #     print(i)
 
     # DO THIS LAST (For now at least. I'll fix it later.)
-    removenumbers(path, extension)
+    removenumbers(path, extensions)
 
 
 # TODO: Objectify the whole thing
