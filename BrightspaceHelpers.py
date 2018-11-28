@@ -6,13 +6,13 @@ from fuzzywuzzy import fuzz
 
 # TODO: I should probably write a generator for files that have the correct extension
 # TODO: Write this to handle filenames without numbers
-def filenameparser(filename):
+def filenameparser(filename: str):
     number, name, date, submission = filename.split(' - ', 3)
     lastname, firstname = name.split(' ', 1)
     return [number, lastname, firstname, date, submission]
 
 
-def splitfilenames(path, exts):
+def splitfilenames(path: str, exts: list):
     """
 
     :param path: Directory sting where the submitted assignments were downloaded and extracted to
@@ -34,7 +34,7 @@ def splitfilenames(path, exts):
 
 # TODO: Handle case of numbers not at start of files
 # TODO: Change to using the filename parser function
-def removenumbers(path, exts):
+def removenumbers(path: str, exts: list):
     allfiles = os.listdir(path)
     for filename in allfiles:
         for ext in exts:
@@ -43,11 +43,11 @@ def removenumbers(path, exts):
             os.rename(os.path.join(path, filename), os.path.join(path, filename[filename.find(' - ') + 3:]))
 
 
-def write2excel(path, data, outputname):
+def write2excel(path: str, data: list, outputfilename: str):
     # note that xlsxwriter cannot overwrite existing files
-    if not outputname.lower().endswith('.xlsx'):
-        outputname = '.'.join([outputname, 'xlsx'])
-    workbook = xlsxwriter.Workbook(os.path.join(path, outputname))
+    if not outputfilename.lower().endswith('.xlsx'):
+        outputfilename = '.'.join([outputfilename, 'xlsx'])
+    workbook = xlsxwriter.Workbook(os.path.join(path, outputfilename))
     worksheet = workbook.add_worksheet()
     for row in range(len(data)):
         for col in range(len(data[row])):
@@ -55,7 +55,7 @@ def write2excel(path, data, outputname):
     workbook.close()
 
 
-def scanforsoltuions(path, exts, percent):
+def scanforsoltuions(path: str, exts: list, percent: int):
     # external file with a list of solutions copied and pasted from the internet in a python list.
     # Example "solutions.py" file contents:
     # solutionlist = ['''copied from google result''','''students shouldn't do this''','''so many ways to tell''']
@@ -76,7 +76,7 @@ def scanforsoltuions(path, exts, percent):
 
 
 # DONE: Add function to compare students. Should be bigO(1/n)?
-def scanforcopying(path, exts, percent):
+def scanforcopying(path: str, exts: list, percent: int):
     allfiles = os.listdir(path)
     for ext in exts:
         for i in range(len(allfiles) - 1):
