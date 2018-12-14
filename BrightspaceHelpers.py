@@ -6,13 +6,13 @@ from fuzzywuzzy import fuzz
 
 # TODO: I should probably write a generator for files that have the correct extension
 # TODO: Write this to handle filenames without numbers
-def filenameparser(filename: str):
+def filename_parser(filename: str):
     number, name, date, submission = filename.split(' - ', 3)
     lastname, firstname = name.split(' ', 1)
     return [number, lastname, firstname, date, submission]
 
 
-def splitfilenames(path: str, exts: list):
+def split_filenames(path: str, exts: list):
     """
 
     :param path: Directory sting where the submitted assignments were downloaded and extracted to
@@ -28,13 +28,13 @@ def splitfilenames(path: str, exts: list):
             # number, name, date, submission = filename.split(' - ', 3)
             # lastname, firstname = name.split(' ', 1)
             # data.append([number, lastname, firstname, date, submission])
-            data.append(filenameparser(filename))
+            data.append(filename_parser(filename))
     return data
 
 
 # TODO: Handle case of numbers not at start of files
 # TODO: Change to using the filename parser function
-def removenumbers(path: str, exts: list):
+def remove_numbers(path: str, exts: list):
     allfiles = os.listdir(path)
     for filename in allfiles:
         for ext in exts:
@@ -43,7 +43,27 @@ def removenumbers(path: str, exts: list):
             os.rename(os.path.join(path, filename), os.path.join(path, filename[filename.find(' - ') + 3:]))
 
 
-def write2excel(path: str, data: list, outputfilename: str):
+def remove_everything(path: str, exts: list):
+    allfiles = os.listdir(path)
+    for filename in allfiles:
+        for ext in exts:
+            if not filename.lower().endswith(ext.lower()):
+                continue
+            if filename.find(' - ') == -1:
+                continue
+            s1 = filename.find(' - ') + 3
+            s2 = filename.find(' - ', s1) + 3
+            try:
+                os.rename(os.path.join(path, filename), os.path.join(path, filename[filename.find(' - ', s2) + 3:]))
+            # Handle multiple files being submitted with the same name
+            except FileExistsError as e:
+                if os.path.getmtime(e.filename) > os.path.getmtime(e.filename2):
+                    os.remove(e.filename2)
+                else:
+                    os.remove(e.filename)
+
+
+def write_to_excel(path: str, data: list, outputfilename: str):
     # note that xlsxwriter cannot overwrite existing files
     if not outputfilename.lower().endswith('.xlsx'):
         outputfilename = '.'.join([outputfilename, 'xlsx'])
@@ -55,7 +75,7 @@ def write2excel(path: str, data: list, outputfilename: str):
     workbook.close()
 
 
-def scanforsoltuions(path: str, exts: list, percent: int):
+def scan_for_soltuions(path: str, exts: list, percent: int):
     # external file with a list of solutions copied and pasted from the internet in a python list.
     # Example "solutions.py" file contents:
     # solutionlist = ['''copied from google result''','''students shouldn't do this''','''so many ways to tell''']
@@ -72,11 +92,11 @@ def scanforsoltuions(path: str, exts: list, percent: int):
                 # token set ratio had best results
                 score = fuzz.token_set_ratio(soltuion, studentcode)
                 if score > percent:
-                    yield filenameparser(filename)[1:3], filenameparser(filename)[-1], score
+                    yield filename_parser(filename)[1:3], filename_parser(filename)[-1], score
 
 
 # DONE: Add function to compare students. Should be bigO(1/n)?
-def scanforcopying(path: str, exts: list, percent: int):
+def scan_for_copying(path: str, exts: list, percent: int):
     allfiles = os.listdir(path)
     for ext in exts:
         for i in range(len(allfiles) - 1):
@@ -96,23 +116,23 @@ def scanforcopying(path: str, exts: list, percent: int):
                         # ignoring instructor supplied modules
                         # if filename.find(r'OpenGL_2D_class.py') != -1 or allfiles[i].find(r'OpenGL_2D_class.py') != -1:
                         #     continue
-                        if filenameparser(filename)[1:3] == filenameparser(allfiles[i])[1:3]:
+                        if filename_parser(filename)[1:3] == filename_parser(allfiles[i])[1:3]:
                             continue
                         if score >= percent:
-                            yield filenameparser(filename)[1:3], filenameparser(filename)[-1], score, filenameparser(
-                                allfiles[i])[1:3], filenameparser(allfiles[i])[-1]
+                            yield filename_parser(filename)[1:3], filename_parser(filename)[-1], score, filename_parser(
+                                allfiles[i])[1:3], filename_parser(allfiles[i])[-1]
 
 
 def __example__():
-    path = r''
-    extensions = ['.py']
-    outputfilename = ''
+    path = r'C:\Users\Charlie\Downloads\Final Exam - upload  Download Dec 13, 2018 1137 PM'
+    extensions = ['.py', '.zip', '.rar']
+    outputfilename = '3403F18 Final Exam Part 1 grades'
     percentsimilar = 95
     # 85 seemed to turn up the most likely candidates for copying solutions.
     # 95 seemed to work well for finding students copying each other.
 
-    studentfilenamedata = splitfilenames(path, extensions)
-    write2excel(path, studentfilenamedata, outputfilename)
+    studentfilenamedata = split_filenames(path, extensions)
+    write_to_excel(path, studentfilenamedata, outputfilename)
 
     # only really useful when the submissions are code or text files
     # copiesfound = scanforcopying(path, extensions, percentsimilar)
@@ -123,7 +143,8 @@ def __example__():
     #     print(i)
 
     # DO THIS LAST (For now at least. I'll fix it later.)
-    removenumbers(path, extensions)
+    remove_numbers(path, extensions)
+    remove_everything(path, extensions)
 
 
 # TODO: Objectify the whole thing
