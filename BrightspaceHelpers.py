@@ -32,8 +32,7 @@ def split_filenames(path: str, exts: list):
     return data
 
 
-# TODO: Handle case of numbers not at start of files
-# TODO: Change to using the filename parser function
+# TODO: Handle case of numbers not at start of files (regex)
 def remove_numbers(path: str, exts: list):
     allfiles = os.listdir(path)
     for filename in allfiles:
@@ -44,23 +43,26 @@ def remove_numbers(path: str, exts: list):
 
 
 def remove_everything(path: str, exts: list):
-    allfiles = os.listdir(path)
-    for filename in allfiles:
-        for ext in exts:
-            if not filename.lower().endswith(ext.lower()):
-                continue
-            if filename.find(' - ') == -1:
-                continue
-            s1 = filename.find(' - ') + 3
-            s2 = filename.find(' - ', s1) + 3
-            try:
-                os.rename(os.path.join(path, filename), os.path.join(path, filename[filename.find(' - ', s2) + 3:]))
-            # Handle multiple files being submitted with the same name
-            except FileExistsError as e:
-                if os.path.getmtime(e.filename) > os.path.getmtime(e.filename2):
-                    os.remove(e.filename2)
-                else:
-                    os.remove(e.filename)
+    while True:
+        try:
+            allfiles = os.listdir(path)
+            for filename in allfiles:
+                for ext in exts:
+                    if not filename.lower().endswith(ext.lower()):
+                        continue
+                    if filename.find(' - ') == -1:
+                        continue
+                    s1 = filename.find(' - ') + 3
+                    s2 = filename.find(' - ', s1) + 3
+                    os.rename(os.path.join(path, filename), os.path.join(path, filename[filename.find(' - ', s2) + 3:]))
+        # Handle multiple files being submitted with the same name
+        except FileExistsError as e:
+            if os.path.getmtime(e.filename) > os.path.getmtime(e.filename2):
+                os.remove(e.filename2)
+            else:
+                os.remove(e.filename)
+            continue
+        break
 
 
 def write_to_excel(path: str, data: list, outputfilename: str):
