@@ -16,7 +16,7 @@ def split_filenames(path: str, exts: list):
     """
 
     :param path: Directory sting where the submitted assignments were downloaded and extracted to
-    :param ext: Tuple of stings of file extensions to scan for. Example: ('.py') or ('.sldprt','.sldasm')
+    :param exts: Tuple of stings of file extensions to scan for. Example: ('.py') or ('.sldprt','.sldasm')
     :return:
     """
     allfiles = os.listdir(path)
@@ -88,7 +88,7 @@ def scan_for_soltuions(path: str, exts: list, percent: int):
         for ext in exts:
             if not filename.lower().endswith(ext.lower()):
                 continue
-            with open(os.path.join(path, filename), 'r') as studentfile:
+            with open(os.path.join(path, filename), 'r', encoding='UTF-8') as studentfile:
                 studentcode = studentfile.read()
             for soltuion in solutionslist:
                 # token set ratio had best results
@@ -104,12 +104,12 @@ def scan_for_copying(path: str, exts: list, percent: int):
         for i in range(len(allfiles) - 1):
             if not allfiles[i].lower().endswith(ext.lower()):
                 continue
-            with open(os.path.join(path, allfiles[i]), 'r') as checkfile:
+            with open(os.path.join(path, allfiles[i]), 'r', encoding='UTF-8') as checkfile:
                 checkcode = checkfile.read()
                 for filename in allfiles[i + 1:]:
                     if not filename.lower().endswith(ext.lower()):
                         continue
-                    with open(os.path.join(path, filename), 'r') as studentfile:
+                    with open(os.path.join(path, filename), 'r', encoding='UTF-8') as studentfile:
                         studentcode = studentfile.read()
                         score = fuzz.ratio(checkcode, studentcode)
                         # lets ignore some files to speed it up some.
@@ -121,14 +121,14 @@ def scan_for_copying(path: str, exts: list, percent: int):
                         if filename_parser(filename)[1:3] == filename_parser(allfiles[i])[1:3]:
                             continue
                         if score >= percent:
-                            yield filename_parser(filename)[1:3], filename_parser(filename)[-1], score, filename_parser(
-                                allfiles[i])[1:3], filename_parser(allfiles[i])[-1]
+                            yield filename_parser(filename)[1:3], filename_parser(filename)[-1], score, \
+                                  filename_parser(allfiles[i])[1:3], filename_parser(allfiles[i])[-1]
 
 
 def __example__():
-    path = r'C:\Users\Charlie\Downloads\Final Exam - upload  Download Dec 13, 2018 1137 PM'
-    extensions = ['.py', '.zip', '.rar']
-    outputfilename = '3403F18 Final Exam Part 1 grades'
+    path = r'C:\Users\Charlie\Dropbox\Graduate\GTA\3403S19\Grading\Final Project - one zip file per team Download May 10, 2019 156 PM'
+    extensions = ['.py', '.zip', '.rar', '.7z']
+    outputfilename = '3403S19 Final Project grades'
     percentsimilar = 95
     # 85 seemed to turn up the most likely candidates for copying solutions.
     # 95 seemed to work well for finding students copying each other.
@@ -137,16 +137,16 @@ def __example__():
     write_to_excel(path, studentfilenamedata, outputfilename)
 
     # only really useful when the submissions are code or text files
-    # copiesfound = scanforcopying(path, extensions, percentsimilar)
-    # for i in copiesfound:
-    #     print(i)
+    copiesfound = scan_for_copying(path, ['.py'], percentsimilar)
+    for i in copiesfound:
+        print(i)
     # solutionsfound = scanforsoltuions(path, extensions, percentsimilar)
     # for i in solutionsfound:
     #     print(i)
 
     # DO THIS LAST (For now at least. I'll fix it later.)
     remove_numbers(path, extensions)
-    remove_everything(path, extensions)
+    # remove_everything(path, extensions)
 
 
 # TODO: Objectify the whole thing
