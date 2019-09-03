@@ -84,27 +84,39 @@ class Plane:
         return psi, theta, phi
 
     @staticmethod
-    @jit(nopython=True)
-    def R_FB(phi, theta, psi):
-        return np.array([[np.cos(theta) * np.cos(psi),
-                          np.sin(phi) * np.sin(theta) * np.cos(psi) - np.cos(phi) * np.sin(psi),
-                          np.cos(phi) * np.sin(theta) * np.cos(psi) + np.sin(phi) * np.sin(psi)],
-                         [np.cos(theta) * np.sin(psi),
-                          np.sin(phi) * np.sin(theta) * np.sin(psi) + np.cos(phi) * np.cos(psi),
-                          np.cos(phi) * np.sin(theta) * np.sin(psi) - np.sin(phi) * np.cos(psi)],
-                         [-np.sin(theta), np.sin(phi) * np.cos(theta), np.cos(phi) * np.cos(theta)]])
+    # @jit(nopython=True)
+    def R_FB(*args):
+        if len(args) == 3:  # Given Euler angles
+            phi, theta, psi = args
+            return np.array([[np.cos(theta) * np.cos(psi),
+                              np.sin(phi) * np.sin(theta) * np.cos(psi) - np.cos(phi) * np.sin(psi),
+                              np.cos(phi) * np.sin(theta) * np.cos(psi) + np.sin(phi) * np.sin(psi)],
+                             [np.cos(theta) * np.sin(psi),
+                              np.sin(phi) * np.sin(theta) * np.sin(psi) + np.cos(phi) * np.cos(psi),
+                              np.cos(phi) * np.sin(theta) * np.sin(psi) - np.sin(phi) * np.cos(psi)],
+                             [-np.sin(theta), np.sin(phi) * np.cos(theta), np.cos(phi) * np.cos(theta)]])
+        elif len(args) == 4:
+            e0, e1, e2, e3 = args
+            return np.array([[e1 ** 2 + e0 ** 2 - e2 ** 2 - e3 ** 2, 2 * (e1 * e2 - e3 * e0), 2 * (e1 * e3 + e2 * e0)],
+                             [2 * (e1 * e2 + e3 * e0), e2 ** 2 + e0 ** 2 - e1 ** 2 - e3 ** 2, 2 * (e2 * e3 - e1 * e0)],
+                             [2 * (e1 * e3 + e2 * e0), 2 * (e2 * e3 - e1 * e0), e3 ** 2 + e0 ** 2 - e1 ** 2 - e2 ** 2]])
 
-    def R_BF(self, phi, theta, psi):
-        return self.R_FB(phi, theta, psi).T
+    def R_BF(self, *args):
+        if len(args) == 3:  # Given Euler angles
+            phi, theta, psi = args
+            return self.R_FB(phi, theta, psi).T
+        elif len(args) == 4:  # Given Euler angles
+            e0, e1, e2, e3 = args
+            return self.R_FB(e0, e1, e2, e3).T
 
     def derivatives2(self, state, t, Fx, Fy, Fz, Ell, M, N):
         pn, pe, pd, u, v, w, e0, e1, e2, e3, p, q, r = state
         psi, theta, phi = self.EP2Euler321((e0, e1, e2, e3))
 
-        Fx, Fy, Fz = np.matmul(self.R_BF(phi, theta, psi), [0, 0, 0])
+        Fx, Fy, Fz = np.matmul(self.R_BF(e0, e1, e2, e3), [0, 0, 0])
         Fx += 20e3 * np.sin(t)
 
-        pn_dot, pe_dot, pd_dot = np.matmul(self.R_FB(phi, theta, psi), np.array([u, v, w]).T).T
+        pn_dot, pe_dot, pd_dot = np.matmul(self.R_FB(e0, e1, e2, e3), np.array([u, v, w]).T).T
         M += 1e3
 
         u_dot = (r * v - q * w) + (Fx / self.MAV.mass)
@@ -145,9 +157,9 @@ class Plane:
         psi, theta, phi = self.EP2Euler321((e0, e1, e2, e3))
 
         # rotate gravity from fixed frame to body frame
-        Fx, Fy, Fz = np.matmul(self.R_BF(phi, theta, psi), [0, 0, self.MAV.mass * self.g])
+        Fx, Fy, Fz = np.matmul(self.R_BF(e0, e1, e2, e3), [0, 0, self.MAV.mass * self.g])
 
-        pn_dot, pe_dot, pd_dot = np.matmul(self.R_FB(phi, theta, psi), np.array([u, v, w]).T).T
+        pn_dot, pe_dot, pd_dot = np.matmul(self.R_FB(e0, e1, e2, e3), np.array([u, v, w]).T).T
 
         u_dot = (r * v - q * w) + (Fx / self.MAV.mass)
         v_dot = (p * w - r * u) + (Fy / self.MAV.mass)
@@ -368,10 +380,12 @@ def main():
         camera.snap()
         return ax,
 
-    for i in range(len(sim_Euler2) - 1):
-        animate(i)
-    animation = camera.animate(interval=50)
-    animation.save('basic_animation_002.gif', writer=PillowWriter())
+    thing = animate(0)
+
+    # for i in range(len(sim_Euler2) - 1):
+    #     animate(i)
+    # animation = camera.animate(interval=50)
+    # animation.save('basic_animation_002.gif', writer=PillowWriter())
     plt.show()
 
 
